@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"github.com/lufeipeng/DefenceInfoEditor/controllers"
+	"github.com/lufeipeng/lufeipeng/DefenceInfoEditor/controllers"
 	"github.com/astaxie/beego"
 )
 

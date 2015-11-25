@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "github.com/lufeipeng/DefenceInfoEditor/routers"
+	_ "github.com/lufeipeng/lufeipeng/DefenceInfoEditor/routers"
 	"github.com/astaxie/beego"
 )
 

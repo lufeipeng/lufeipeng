@@ -35,9 +35,10 @@
 	<div id='right'>
 	    <div id='params'>
 	        <div id='parameters'></div>
-	        <div id='sendDiv'><input type='button' onclick='callSave();' value='Call'></div>
+	        <div id='sendDiv'><input type='button' onclick='callSave();' value='保存'></div>
 	    </div>
-	    <div id='result'>
+	    	<div id='result'></div>
+	    	<div id='defenceInfo'></div>
 	    </div>
 	</div>
 </body>

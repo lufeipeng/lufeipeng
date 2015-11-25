@@ -83,7 +83,15 @@ function callSave() {
 	       id = n.attr('id').substr(6);
 	       param[id] = n.val();
 	   });
-	   param['value'] = $('#parameters')
+	   param['value'] = $('#jsonValues').val();
+	   
+	   try {
+           var obj = JSON.parse(param['value']);
+       } catch (e) {
+    	   alert("小伙，保存的阵型Json数据有问题!!")
+          return;
+       }
+	   
 	   $.post('./view',
 		        param,
 		        function (data) {
@@ -99,7 +107,7 @@ function callSave() {
 
 function showDataInTextField(data) {
 	  listHTML = data;
-	  var listHTML = "<textarea name=\"MSG\" id="" cols=100 rows=50>";
+	  var listHTML = "<textarea name=\"MSG\" id=\"jsonValues\" cols=100 rows=50>";
 	  listHTML += data;
 	  listHTML += "</textarea>";
       $('#result').html(listHTML);
