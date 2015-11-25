@@ -103,6 +103,6 @@ func TestReflect(t *testing.T) {
 
 
 func TestView(t *testing.T) {
-	mapName := controllers.GetWorldLevelupString("egypt_levelup");
+	mapName := controllers.GetWorldInitStr("kongfu_initpos");
 	beego.Trace("testing", "TestMain", mapName)
 }

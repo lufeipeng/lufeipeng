@@ -37,8 +37,8 @@
 	        <div id='parameters'></div>
 	        <div id='sendDiv'><input type='button' onclick='callSave();' value='保存'></div>
 	    </div>
-	    	<div id='result'></div>
-	    	<div id='defenceInfo'></div>
+	    	<div id='resultLeft'></div>
+	    	<div id='resultRight'></div>
 	    </div>
 	</div>
 </body>

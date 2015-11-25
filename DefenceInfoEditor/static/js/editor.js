@@ -67,7 +67,6 @@ function callView() {
 	        param,
 	        function (data) {
 			     try {
-		             var obj = JSON.parse(data);
 		             showDataInTextField(data);
 		         } catch (e) {
 		             console.log(e);
@@ -83,7 +82,7 @@ function callSave() {
 	       id = n.attr('id').substr(6);
 	       param[id] = n.val();
 	   });
-	   param['value'] = $('#jsonValues').val();
+	   param['value'] = $('#defenceStr').val();
 	   
 	   try {
            var obj = JSON.parse(param['value']);
@@ -106,9 +105,17 @@ function callSave() {
 }
 
 function showDataInTextField(data) {
-	  listHTML = data;
-	  var listHTML = "<textarea name=\"MSG\" id=\"jsonValues\" cols=100 rows=50>";
-	  listHTML += data;
+      var obj = JSON.parse(data);
+    
+	  var listHTML = "<textarea name=\"MSG\" id=\"defenceStr\" cols=100 rows=50>";
+	  listHTML += obj.defenceStr;
 	  listHTML += "</textarea>";
-      $('#result').html(listHTML);
+      $('#resultLeft').html(listHTML);
+      
+      
+	  var listHTML = "<textarea name=\"MSG\" id=\"defenceInfo\" cols=100 rows=50>";
+	  listHTML += obj.detailInfo;
+	  listHTML += "</textarea>";
+      $('#resultRight').html(listHTML);
+
 }
