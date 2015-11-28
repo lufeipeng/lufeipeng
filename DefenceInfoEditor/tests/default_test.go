@@ -5,7 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 	"runtime"
+	//"fmt"
 	"path/filepath"
+	//"strconv"
 	_ "github.com/lufeipeng/lufeipeng/DefenceInfoEditor/routers"
 	controllers "github.com/lufeipeng/lufeipeng/DefenceInfoEditor/controllers"
 
@@ -103,6 +105,5 @@ func TestReflect(t *testing.T) {
 
 
 func TestView(t *testing.T) {
-	mapName := controllers.GetWorldInitStr("kongfu_initpos");
-	beego.Trace("testing", "TestMain", mapName)
+	controllers.GetWorldLevelUpStr("pirate_levelup");
 }

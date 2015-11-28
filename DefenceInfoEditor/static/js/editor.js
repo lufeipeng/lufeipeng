@@ -95,7 +95,6 @@ function callSave() {
 		        param,
 		        function (data) {
 				     try {
-			             var obj = JSON.parse(data);
 			             showDataInTextField(data);
 			         } catch (e) {
 			             console.log(e);

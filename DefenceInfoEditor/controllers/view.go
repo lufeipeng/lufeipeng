@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/jsonq"
 	"os"
 	"fmt"
+	"sort"
 	"reflect"
 	"path/filepath"
 	"io/ioutil"
@@ -18,19 +19,65 @@ type ViewController struct {
 	beego.Controller
 }
 
+
+type PositionInfo struct {
+	T string  `json:"T"`
+	R string  `json:"R"`
+	C string  `json:"C"`
+}
+
+type PositionNumInfo struct {
+	T string  `json:"T"`
+	N string  `json:"N"`
+}
+
+type PlantsInfo struct {
+	T string  `json:"T"`
+	L string  `json:"L"`
+	A string  `json:"A"`
+	Y string  `json:"Y"`
+}
+
+type DefenceInfoDetail struct {
+	PP []PositionInfo  `json:"pp"`
+	PI []PlantsInfo  `json:"pi"`
+	VI string  `json:"vi"`
+	MN string  `json:"mn"`
+	EMN string  `json:"emn"`
+}
+
+type DefenceInfo struct {
+	DefenceInfoDetail DefenceInfoDetail `json:"d"`
+}
+
+type DefenceOneLevelUpInfo struct {
+	PP map[string]PositionNumInfo
+	PI map[string]PlantsInfo
+}
+
+func printObject(info string, v interface{}) {
+	fmt.Printf(info + " %+v\n", v)
+}
+
+type PositionPrintNumInfo struct {
+	plantId string
+	num int
+	level string
+}
+
+
 func (c *ViewController) Get() {
 	worldName := c.Ctx.Input.Query("worldName");
 	beego.Debug("Get value is  " + worldName)
 	worldJsonStr := readJsonFileAsString(worldName)
 	resultMap := make(map[string]string);
 	resultMap["defenceStr"] = worldJsonStr
-	resultMap["detailInfo"] = "current detail info is"
-	
+	if(strings.Contains(worldName, "init")) {
+		resultMap["detailInfo"] = GetWorldInitStr(worldName)	
+	}else{
+		resultMap["detailInfo"] = GetWorldLevelUpStr(worldName)
+	}
 	resultBytes, _ := json.Marshal(resultMap);
-
-	//mapName := GetWorldInitString(worldName);
-	//beego.Debug("worldMapName is" + mapName)
-	
 	c.Ctx.WriteString( string(resultBytes) );
 }
 
@@ -54,59 +101,77 @@ func readJsonFileAsString(worldName string) string {
 	return string(buff);
 }
 
-type PositionInfo struct {
-	T string  `json:"T"`
-	R string  `json:"R"`
-	C string  `json:"C"`
+func GetWorldLevelUpStr(levelUpWordName string) string {
+	var initWorldName string;
+	if(strings.Contains(levelUpWordName, "egypt")){
+		initWorldName = "egypt_initpos"
+	}else if(strings.Contains(levelUpWordName, "pirate")) {
+		initWorldName = "pirate_initpos"
+	}else if(strings.Contains(levelUpWordName, "kongfu")) {
+		initWorldName = "kongfu_initpos"
+	}
+	beego.Debug("initWorldName", initWorldName);
+	printNumInfoMap := GetWorldInitData(initWorldName);
+	//fmt.Printf("printNumInfoMap, " + " %+v\n", printNumInfoMap)
+	
+	defenceLevelUpInfo := GetWorldLevelupInfo(levelUpWordName);
+	
+	sumPlantInfoMap := make(map[int](map[string]PositionPrintNumInfo) );
+	
+	var levels []int
+    for k := range defenceLevelUpInfo {
+        levels = append(levels, k)
+    }
+    sort.Ints(levels)
+	var firstLevel = true;
+	for _, level := range levels {
+		oneLevelInfo, _ := defenceLevelUpInfo[level];		
+		//FirstLevel
+		sumPlantInfoMap[level] = make(map[string]PositionPrintNumInfo, 0);
+		if(firstLevel) {
+			sumPlantInfoMap[1] = make(map[string]PositionPrintNumInfo, 0);
+			updateNumInfoMap, _:= sumPlantInfoMap[1];
+			for key, value := range printNumInfoMap {
+				updateNumInfoMap[key] = value;
+			}
+		}	
+		updateNumInfoMap, _ := sumPlantInfoMap[level] 
+		for key, value := range sumPlantInfoMap[level - 1] {
+			updateNumInfoMap[key] = value;
+		}		
+		for plantId, v := range oneLevelInfo.PI {
+			if info, ok := updateNumInfoMap[plantId]; ok {
+				info.level = v.L;
+			} else {
+				var info PositionPrintNumInfo;
+				info.level = v.L;
+				info.num = 0;
+				info.plantId = v.T;
+				updateNumInfoMap[plantId] = info;
+			}
+		}
+		for plantId, v := range oneLevelInfo.PP {
+			if info, ok := updateNumInfoMap[plantId]; ok {
+				vNum, _ := strconv.Atoi(v.N);
+				info.num = info.num + vNum;
+				updateNumInfoMap[plantId] = info;
+			}else{
+				fmt.Printf("sumPlantInfoMap Error, no pi info, %d \n ", plantId)
+			}
+		}
+		//fmt.Printf("sumPlantInfoMap2 %+v\n", updateNumInfoMap)
+	}
+	//fmt.Printf("sumPlantInfoMap %+v\n", sumPlantInfoMap)
+	return GetStrInfoFromLevelMap(sumPlantInfoMap);
 }
 
-type PositionNumInfo struct {
-	T string  `json:"T"`
-	N string  `json:"N"`
-}
-
-type PlantsInfo struct {
-	T string  `json:"T"`
-	L string  `json:"L"`
-	A string  `json:"A"`
-	Y string  `json:"Y"`
-}
-
-type DefenceInfoDetail struct {
-	pp []PositionInfo  `json:"pp"`
-	pi []PlantsInfo  `json:"pi"`
-	vi string  `json:"vi"`
-	mn string  `json:"mn"`
-	emn string  `json:"emn"`
-}
-
-type DefenceInfo struct {
-	DefenceInfoDetail DefenceInfoDetail `json:"d"`
-}
-
-type DefenceOneLevelUpInfo struct {
-	pp []PositionNumInfo  `json:"pp"`
-	pi []PlantsInfo  `json:"pi"`
-}
-
-func printObject(info string, v interface{}) {
-	fmt.Printf(info + " %+v\n", v)
-}
-
-type PositionPrintNumInfo struct {
-	plantId string
-	num int
-	level string
-}
-
-func GetWorldInitStr(worldName string) string{
+func GetWorldInitData(worldName string) map[string]PositionPrintNumInfo {
 	worldInitInfo := GetWorldInitInfo(worldName)
 	printNumInfoMap := make(map[string]PositionPrintNumInfo, 0);
-	for _,onePositionInfo := range worldInitInfo.DefenceInfoDetail.pp {
-		for _,onePlantInfo := range worldInitInfo.DefenceInfoDetail.pi {
-			
-			printObject("pp  is ", onePositionInfo);
-			printObject("pi  is ", onePlantInfo);
+	for _,onePositionInfo := range worldInitInfo.DefenceInfoDetail.PP {
+		for _,onePlantInfo := range worldInitInfo.DefenceInfoDetail.PI {
+			//printObject("pp  is ", onePositionInfo);
+			//printObject("pi  is ", onePlantInfo);
 			
 			if(onePlantInfo.T == onePositionInfo.T) {
 				if v, ok := printNumInfoMap[onePlantInfo.T]; ok {
@@ -122,20 +187,59 @@ func GetWorldInitStr(worldName string) string{
 			}
 		}
 	}
+	return printNumInfoMap;
+}
+
+func GetWorldInitStr(worldName string) string {
+	printNumInfoMap := GetWorldInitData(worldName);
 	printObject("levelUpMap info  is ", printNumInfoMap);
-	str := GetStrInfoFromInfoMap(printNumInfoMap);
+	str := GetStrInfoFromInitMap(printNumInfoMap);
 	printObject("GetStrInfoFromInfoMap info  is ", str);
 	return str;
 }
 
-func GetStrInfoFromInfoMap(mapInfo map[string]PositionPrintNumInfo) string{
+func GetStrInfoFromInitMap(mapInfo map[string]PositionPrintNumInfo) string {
 	var str string;
-	for _, info := range mapInfo {
-		str += ("plantID is" + info.plantId + ",level:" + info.level + ",num" + strconv.Itoa(info.num) );
+	for _, plantInfo := range mapInfo {
+		str += ("" + plantInfo.plantId + "      x" + strconv.Itoa(plantInfo.num) + "        lv." +  plantInfo.level + "\n" );
 	}
 	return str;
 }
 
+func GetStrInfoFromLevelMap(mapInfo map[int](map[string]PositionPrintNumInfo) ) string {
+	var levels []int
+    for k, _ := range mapInfo {
+        levels = append(levels, k)
+    }
+    sort.Ints(levels)
+    //fmt.Printf("GetStrInfoFromLevelMap, " + " %+v\n", levels)
+    
+	var str string;
+	for _, level := range levels {
+		info, _ := mapInfo[level];
+		
+		//fmt.Printf("GetStrInfoFromLevelMap, info" + " %+v\n", info)
+		
+		str += "等级" + strconv.Itoa(level);
+		str += "\n";
+		
+		var plantIds []string
+		for plantId, _ := range info {
+			plantIds = append(plantIds,  plantId);
+		}
+		sort.Strings(plantIds);
+		 
+		for _, plantId := range plantIds {
+			//fmt.Println("plantInfo,  id:",  strconv.Itoa(plantId)  )
+			plantInfo, _:= info[ plantId ];
+			//fmt.Printf("plantInfo, " + " %+v\n", plantInfo )
+			str += ("" + plantInfo.plantId + "      x" + strconv.Itoa(plantInfo.num) + "        lv." +  plantInfo.level + "\n" );
+		}
+		str += "\n";
+		str += "\n";
+	}
+	return str;
+}
 
 func GetWorldLevelupInfo(worldName string) map[int]DefenceOneLevelUpInfo {
 	defenceStr := readJsonFileAsString(worldName);
@@ -147,10 +251,10 @@ func GetWorldLevelupInfo(worldName string) map[int]DefenceOneLevelUpInfo {
 	
 	levelUpMap := make(map[int]DefenceOneLevelUpInfo);
 	
-	for level := 1; level <= 30; level++ {
+	for level := 2; level <= 30; level++ {
 		var oneDefenceInfo DefenceOneLevelUpInfo;
-		oneDefenceInfo.pp = make([]PositionNumInfo,0);
-		oneDefenceInfo.pi = make([]PlantsInfo, 0);
+		oneDefenceInfo.PP = make( map[string]PositionNumInfo, 0);
+		oneDefenceInfo.PI = make( map[string]PlantsInfo, 0);
 		
 		objectInfo, _ := jq.Object("l" + strconv.Itoa(level) );
 		v := reflect.ValueOf(objectInfo);
@@ -169,7 +273,7 @@ func GetWorldLevelupInfo(worldName string) map[int]DefenceOneLevelUpInfo {
 				var positionNumInfo PositionNumInfo
 				positionNumInfo.T = reflect.ValueOf( reflect.ValueOf(ppInfo).Interface().(map[string]interface{})["T"] ).String();
 				positionNumInfo.N = reflect.ValueOf( reflect.ValueOf(ppInfo).Interface().(map[string]interface{})["N"] ).String();
-				oneDefenceInfo.pp = append(oneDefenceInfo.pp, positionNumInfo);
+				oneDefenceInfo.PP[ positionNumInfo.T ]  = positionNumInfo;
 			}
 		}
 		
@@ -181,12 +285,12 @@ func GetWorldLevelupInfo(worldName string) map[int]DefenceOneLevelUpInfo {
 				plantsInfo.L = reflect.ValueOf( reflect.ValueOf(piInfo).Interface().(map[string]interface{})["L"] ).String();
 				plantsInfo.A = reflect.ValueOf( reflect.ValueOf(piInfo).Interface().(map[string]interface{})["A"] ).String();
 				plantsInfo.Y = reflect.ValueOf( reflect.ValueOf(piInfo).Interface().(map[string]interface{})["Y"] ).String();
-				oneDefenceInfo.pi = append(oneDefenceInfo.pi, plantsInfo);
+				oneDefenceInfo.PI[ plantsInfo.T ] = plantsInfo
 			}
 		}
 		levelUpMap[ level ] = oneDefenceInfo;
 	}
-	printObject("levelUpMap info  is ", levelUpMap);
+	//printObject("levelUpMap info  is ", levelUpMap);
 
 	return levelUpMap;
 }
@@ -194,25 +298,15 @@ func GetWorldLevelupInfo(worldName string) map[int]DefenceOneLevelUpInfo {
 
 func GetWorldInitInfo(worldName string) DefenceInfo {
 	defenceStr := readJsonFileAsString(worldName);
-	var defenceInfo DefenceInfo;
-	
-	beego.Debug("GetWorldInitInfo " + worldName )
-	
+	var defenceInfo DefenceInfo	
 	err := json.Unmarshal([]byte(defenceStr), &defenceInfo)
 	if err != nil {
 	 	beego.Debug("getWorldInitString " + worldName + ", value:" + defenceStr)
  	}
-	plantSize := strconv.Itoa(len(defenceInfo.DefenceInfoDetail.pi));
-	beego.Debug("getWorldInitString pi num is" + plantSize);
-	
-	for _, plantInfo := range defenceInfo.DefenceInfoDetail.pi {
-		beego.Debug("getWorldInitString " + plantInfo.T);
-	}
-	
-	for _, positionInfo := range defenceInfo.DefenceInfoDetail.pp {
-		beego.Debug("getWorldInitString " + positionInfo.T);
-	} 
-	printObject("defenceInfo init info  is ", defenceInfo);
+	plantSize := strconv.Itoa(len(defenceInfo.DefenceInfoDetail.PI));
+	beego.Debug("getWorldInitString pi num is," + plantSize);
+	plantInfoSize := strconv.Itoa(len(defenceInfo.DefenceInfoDetail.PP))
+	beego.Debug("getWorldInitString pp num is," + plantInfoSize);
 	return defenceInfo;
 }
 
@@ -238,5 +332,15 @@ func (c *ViewController) Post() {
 	if err2 != nil {
 		panic("open file failed!")
 	}
-	c.Ctx.WriteString( configValue );
+	
+	resultMap := make(map[string]string);
+	resultMap["defenceStr"] = configValue
+	if(strings.Contains(worldName, "init")) {
+		resultMap["detailInfo"] = GetWorldInitStr(worldName)	
+	}else{
+		resultMap["detailInfo"] = GetWorldLevelUpStr(worldName)
+	}
+	resultBytes, _ := json.Marshal(resultMap);
+	c.Ctx.WriteString( string(resultBytes) );
+	
 	}
