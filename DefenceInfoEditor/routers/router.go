@@ -8,4 +8,5 @@ import (
 func init() {
     beego.Router("/", &controllers.MainController{});
     beego.Router("/view", &controllers.ViewController{});
+    beego.Router("/defenceview", &controllers.ViewDefenceController{});
 }

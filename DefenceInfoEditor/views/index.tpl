@@ -36,6 +36,8 @@
 	    <div id='params'>
 	        <div id='parameters'></div>
 	        <div id='sendDiv'><input type='button' onclick='callSave();' value='保存'></div>
+	        <div id='sendDiv'><input type='button' onclick='viewDefence("ios");' value='转化为IOS'></div>
+	        <div id='sendDiv'><input type='button' onclick='viewDefence("android");' value='转化为Android'></div>
 	    </div>
 	    	<div id='resultLeft'></div>
 	    	<div id='resultRight'></div>

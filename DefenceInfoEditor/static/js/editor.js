@@ -103,6 +103,35 @@ function callSave() {
 		);
 }
 
+function viewDefence(platform) {
+	param = {};
+	   $(".paramInput").each(function (i, n) {
+	       n = $(n);
+	       id = n.attr('id').substr(6);
+	       param[id] = n.val();
+	   });
+	   param['value'] = $('#defenceStr').val();
+	   param['platform'] = platform;
+	   
+	   try {
+           var obj = JSON.parse(param['value']);
+       } catch (e) {
+    	   alert("小伙，保存的阵型Json数据有问题!!")
+          return;
+       }
+	   
+	   $.post('./defenceview',
+		        param,
+		        function (data) {
+				     try {
+			             showDataInTextField(data);
+			         } catch (e) {
+			             console.log(e);
+			         }
+		        }
+		);
+}
+
 function showDataInTextField(data) {
       var obj = JSON.parse(data);
     
