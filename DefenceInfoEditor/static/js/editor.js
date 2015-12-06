@@ -135,13 +135,13 @@ function viewDefence(platform) {
 function showDataInTextField(data) {
       var obj = JSON.parse(data);
     
-	  var listHTML = "<textarea name=\"MSG\" id=\"defenceStr\" cols=100 rows=50>";
+	  var listHTML = "<textarea name=\"MSG\" id=\"defenceStr\" style=\"width: 100%;height: 100%\">";
 	  listHTML += obj.defenceStr;
 	  listHTML += "</textarea>";
       $('#resultLeft').html(listHTML);
       
       
-	  var listHTML = "<textarea name=\"MSG\" id=\"defenceInfo\" cols=100 rows=50>";
+	  var listHTML = "<textarea name=\"MSG\" id=\"defenceInfo\" style=\"width: 100%;height: 100%\">";
 	  listHTML += obj.detailInfo;
 	  listHTML += "</textarea>";
       $('#resultRight').html(listHTML);
