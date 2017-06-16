@@ -55,7 +55,7 @@ def help(argv):
 
 def sync(argv):
 	"""
-	./syncImages sync game (push game images to harbor)
+	./syncImages sync (push images  from srcDockerImagesUrl to dstDockerImagesUrl)
 """
 	if len(argv) < 1:
 		help(["sync"]);
